@@ -4,6 +4,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module.js';
 import { UsersModule } from './users/users.module.js';
 import { ObrasModule } from './obras/obras.module.js';
+import { AlmacenesModule } from './almacenes/almacenes.module.js';
+import { SectorizacionModule } from './sectorizacion/sectorizacion.module.js';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 
@@ -27,6 +29,8 @@ import { AppService } from './app.service.js';
     AuthModule,
     UsersModule,
     ObrasModule,
+    AlmacenesModule,
+    SectorizacionModule,
   ],
   controllers: [AppController],
   providers: [AppService],
