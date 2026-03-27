@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Item, AlmacenItem } from './entities/index.js';
+import { Item, AlmacenItem, EntradaStock } from './entities/index.js';
 import { ItemOrigen } from './enums/index.js';
-import { CreateItemDto, UpdateItemDto, SetAlmacenStockDto } from './dto/index.js';
+import { CreateItemDto, UpdateItemDto, SetAlmacenStockDto, CreateEntradaStockDto } from './dto/index.js';
 
 @Injectable()
 export class InventarioService {
@@ -12,6 +12,8 @@ export class InventarioService {
     private readonly itemRepo: Repository<Item>,
     @InjectRepository(AlmacenItem)
     private readonly almacenItemRepo: Repository<AlmacenItem>,
+    @InjectRepository(EntradaStock)
+    private readonly entradaStockRepo: Repository<EntradaStock>,
   ) {}
 
   async findAll(tipoOrigen?: ItemOrigen): Promise<Item[]> {
@@ -48,7 +50,7 @@ export class InventarioService {
     });
   }
 
-  async create(dto: CreateItemDto): Promise<Item> {
+  async create(dto: CreateItemDto, userId?: string): Promise<Item> {
     const item = this.itemRepo.create({
       tipoOrigen: dto.tipoOrigen,
       categoriaId: dto.categoriaId ?? null,
@@ -62,7 +64,29 @@ export class InventarioService {
       precioUnitarioBob: dto.precioUnitarioBob != null ? String(dto.precioUnitarioBob) : null,
       precioUnitarioUsd: dto.precioUnitarioUsd != null ? String(dto.precioUnitarioUsd) : null,
     });
-    return this.itemRepo.save(item);
+    const saved = await this.itemRepo.save(item);
+
+    // Handle initial stock
+    if (dto.stockInicial && dto.almacenId) {
+      const ai = this.almacenItemRepo.create({
+        itemId: saved.id,
+        almacenId: dto.almacenId,
+        cantidad: dto.stockInicial,
+      });
+      await this.almacenItemRepo.save(ai);
+
+      // Log the entrada
+      const entrada = this.entradaStockRepo.create({
+        itemId: saved.id,
+        almacenId: dto.almacenId,
+        cantidad: dto.stockInicial,
+        descripcion: 'Stock inicial al registrar ítem',
+        registradoPor: userId ?? null,
+      });
+      await this.entradaStockRepo.save(entrada);
+    }
+
+    return saved;
   }
 
   async update(id: string, dto: UpdateItemDto): Promise<Item> {
@@ -137,5 +161,46 @@ export class InventarioService {
   async remove(id: string): Promise<void> {
     const item = await this.findById(id);
     await this.itemRepo.remove(item);
+  }
+
+  async createEntradaStock(
+    itemId: string,
+    dto: CreateEntradaStockDto,
+    userId?: string,
+  ): Promise<EntradaStock> {
+    await this.findById(itemId);
+
+    // Upsert almacen_items
+    let ai = await this.almacenItemRepo.findOne({
+      where: { itemId, almacenId: dto.almacenId },
+    });
+    if (ai) {
+      ai.cantidad += dto.cantidad;
+    } else {
+      ai = this.almacenItemRepo.create({
+        itemId,
+        almacenId: dto.almacenId,
+        cantidad: dto.cantidad,
+      });
+    }
+    await this.almacenItemRepo.save(ai);
+
+    // Log entrada
+    const entrada = this.entradaStockRepo.create({
+      itemId,
+      almacenId: dto.almacenId,
+      cantidad: dto.cantidad,
+      descripcion: dto.descripcion?.trim() || null,
+      registradoPor: userId ?? null,
+    });
+    return this.entradaStockRepo.save(entrada);
+  }
+
+  async getEntradasByItem(itemId: string): Promise<EntradaStock[]> {
+    return this.entradaStockRepo.find({
+      where: { itemId },
+      relations: ['almacen'],
+      order: { createdAt: 'DESC' },
+    });
   }
 }

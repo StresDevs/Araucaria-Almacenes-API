@@ -19,11 +19,12 @@ import { extname, join } from 'path';
 import { existsSync, mkdirSync, unlinkSync } from 'fs';
 import { randomUUID } from 'crypto';
 import { InventarioService } from './inventario.service.js';
-import { CreateItemDto, UpdateItemDto, SetAlmacenStockDto } from './dto/index.js';
+import { CreateItemDto, UpdateItemDto, SetAlmacenStockDto, CreateEntradaStockDto } from './dto/index.js';
 import { ItemOrigen } from './enums/index.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
+import { CurrentUser } from '../auth/decorators/index.js';
 import { UserRole } from '../users/enums/index.js';
 
 const UPLOAD_DIR = join(process.cwd(), 'uploads', 'items');
@@ -138,8 +139,11 @@ export class InventarioController {
   /** POST /api/inventario */
   @Post()
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR)
-  async create(@Body() dto: CreateItemDto) {
-    const item = await this.inventarioService.create(dto);
+  async create(
+    @Body() dto: CreateItemDto,
+    @CurrentUser('id') userId: string,
+  ) {
+    const item = await this.inventarioService.create(dto, userId);
     const full = await this.inventarioService.findById(item.id);
     return {
       success: true,
@@ -230,5 +234,52 @@ export class InventarioController {
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     await this.inventarioService.remove(id);
     return { success: true, message: 'Ítem eliminado correctamente' };
+  }
+
+  /** POST /api/inventario/:id/entradas — Register stock entry */
+  @Post(':id/entradas')
+  @Roles(UserRole.ADMIN, UserRole.SUPERVISOR)
+  async createEntradaStock(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CreateEntradaStockDto,
+    @CurrentUser('id') userId: string,
+  ) {
+    const entrada = await this.inventarioService.createEntradaStock(id, dto, userId);
+    const full = await this.inventarioService.findById(id);
+    return {
+      success: true,
+      message: 'Entrada de stock registrada correctamente',
+      data: {
+        entrada: {
+          id: entrada.id,
+          item_id: entrada.itemId,
+          almacen_id: entrada.almacenId,
+          cantidad: entrada.cantidad,
+          descripcion: entrada.descripcion,
+          registrado_por: entrada.registradoPor,
+          created_at: entrada.createdAt,
+        },
+        item: mapItem(full),
+      },
+    };
+  }
+
+  /** GET /api/inventario/:id/entradas — Get stock entry history */
+  @Get(':id/entradas')
+  async getEntradasStock(@Param('id', ParseUUIDPipe) id: string) {
+    const entradas = await this.inventarioService.getEntradasByItem(id);
+    return {
+      success: true,
+      data: entradas.map((e) => ({
+        id: e.id,
+        item_id: e.itemId,
+        almacen_id: e.almacenId,
+        almacen_nombre: e.almacen?.nombre ?? null,
+        cantidad: e.cantidad,
+        descripcion: e.descripcion,
+        registrado_por: e.registradoPor,
+        created_at: e.createdAt,
+      })),
+    };
   }
 }

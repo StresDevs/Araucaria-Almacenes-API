@@ -11,6 +11,7 @@ import { SectorizacionModule } from './sectorizacion/sectorizacion.module.js';
 import { CategoriasModule } from './categorias/categorias.module.js';
 import { ProveedoresModule } from './proveedores/proveedores.module.js';
 import { InventarioModule } from './inventario/inventario.module.js';
+import { TransferenciasModule } from './transferencias/transferencias.module.js';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 
@@ -46,6 +47,7 @@ import { AppService } from './app.service.js';
     CategoriasModule,
     ProveedoresModule,
     InventarioModule,
+    TransferenciasModule,
   ],
   controllers: [AppController],
   providers: [AppService],

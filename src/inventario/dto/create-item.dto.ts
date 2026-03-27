@@ -5,7 +5,9 @@ import {
   IsString,
   IsUUID,
   IsNumber,
+  IsInt,
   MaxLength,
+  Min,
 } from 'class-validator';
 import { ItemOrigen } from '../enums/index.js';
 
@@ -57,4 +59,14 @@ export class CreateItemDto {
   @IsOptional()
   @IsNumber()
   precioUnitarioUsd?: number;
+
+  // Initial stock (only on creation)
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  stockInicial?: number;
+
+  @IsOptional()
+  @IsUUID()
+  almacenId?: string;
 }
