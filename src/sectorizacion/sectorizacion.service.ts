@@ -13,7 +13,7 @@ import {
   SectorizacionArchivo,
 } from './entities/index.js';
 import { SectorizacionEstado } from './enums/index.js';
-import { CreateSectorizacionDto, UpdateSectorizacionDto, AddArchivoDto } from './dto/index.js';
+import { CreateSectorizacionDto, UpdateSectorizacionDto } from './dto/index.js';
 
 @Injectable()
 export class SectorizacionService {
@@ -144,17 +144,30 @@ export class SectorizacionService {
     return this.sectorizacionRepo.save(sectorizacion);
   }
 
-  async addArchivo(id: string, dto: AddArchivoDto): Promise<SectorizacionArchivo> {
+  async addArchivos(
+    id: string,
+    files: Express.Multer.File[],
+  ): Promise<SectorizacionArchivo[]> {
     await this.findById(id); // verificar que existe
-    const archivo = this.archivoRepo.create({
-      sectorizacionId: id,
-      nombreOriginal: dto.nombreOriginal,
-      nombreArchivo: dto.nombreArchivo,
-      mimetype: dto.mimetype,
-      tamanio: dto.tamanio,
-      url: dto.url,
-    });
-    return this.archivoRepo.save(archivo);
+    const archivos = files.map((file) =>
+      this.archivoRepo.create({
+        sectorizacionId: id,
+        nombreOriginal: file.originalname,
+        nombreArchivo: file.filename,
+        mimetype: file.mimetype,
+        tamanio: file.size,
+        url: `/uploads/sectorizacion/${file.filename}`,
+      }),
+    );
+    return this.archivoRepo.save(archivos);
+  }
+
+  async getArchivo(archivoId: string): Promise<SectorizacionArchivo> {
+    const archivo = await this.archivoRepo.findOne({ where: { id: archivoId } });
+    if (!archivo) {
+      throw new NotFoundException('Archivo no encontrado');
+    }
+    return archivo;
   }
 
   async removeArchivo(archivoId: string): Promise<void> {
