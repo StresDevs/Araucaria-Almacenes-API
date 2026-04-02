@@ -4,7 +4,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { UsersService } from '../users/users.service.js';
 import { LoginDto, ChangePasswordDto } from './dto/index.js';
 import { JwtPayload } from './interfaces/index.js';
