@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 import { AuthModule } from './auth/auth.module.js';
 import { UsersModule } from './users/users.module.js';
 import { ObrasModule } from './obras/obras.module.js';
@@ -19,6 +20,12 @@ import { AprobacionesModule } from './aprobaciones/aprobaciones.module.js';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 
+// Ensure uploads dir exists for local dev (ignored in Vercel)
+const uploadsPath = join(process.cwd(), 'uploads');
+if (!existsSync(uploadsPath)) {
+  try { mkdirSync(uploadsPath, { recursive: true }); } catch { /* noop in serverless */ }
+}
+
 @Module({
   imports: [
     // Env config
@@ -26,7 +33,7 @@ import { AppService } from './app.service.js';
 
     // Serve uploaded images as static files: /uploads/*
     ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), 'uploads'),
+      rootPath: uploadsPath,
       serveRoot: '/uploads',
       serveStaticOptions: { index: false },
     }),
