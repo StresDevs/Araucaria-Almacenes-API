@@ -94,10 +94,13 @@ export class SolicitudesController {
     };
   }
 
-  /** GET /api/solicitudes/items-disponibles?almacenId=... */
+  /** GET /api/solicitudes/items-disponibles?almacenId=...&obraId=... */
   @Get('items-disponibles')
-  async getItemsDisponibles(@Query('almacenId') almacenId?: string) {
-    const items = await this.solicitudesService.getItemsDisponibles(almacenId);
+  async getItemsDisponibles(
+    @Query('almacenId') almacenId?: string,
+    @Query('obraId') obraId?: string,
+  ) {
+    const items = await this.solicitudesService.getItemsDisponibles(almacenId, obraId);
     return {
       success: true,
       data: items,

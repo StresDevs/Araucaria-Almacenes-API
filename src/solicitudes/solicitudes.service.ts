@@ -227,7 +227,7 @@ export class SolicitudesService {
   }
 
   /** Get available items with stock grouped by almacen */
-  async getItemsDisponibles(almacenId?: string): Promise<any[]> {
+  async getItemsDisponibles(almacenId?: string, obraId?: string): Promise<any[]> {
     const qb = this.almacenItemRepo
       .createQueryBuilder('ai')
       .leftJoinAndSelect('ai.item', 'item')
@@ -238,6 +238,10 @@ export class SolicitudesService {
 
     if (almacenId) {
       qb.andWhere('ai.almacen_id = :almacenId', { almacenId });
+    }
+
+    if (obraId) {
+      qb.andWhere('almacen.obra_id = :obraId', { obraId });
     }
 
     const almacenItems = await qb.getMany();
