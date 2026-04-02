@@ -65,6 +65,9 @@ export class Item {
   @Column({ name: 'stock_total', type: 'int', default: 0 })
   stockTotal: number;
 
+  @Column({ name: 'stock_minimo', type: 'int', default: 0 })
+  stockMinimo: number;
+
   @Column({ default: true })
   activo: boolean;
 
