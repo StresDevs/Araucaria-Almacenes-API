@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Post,
   Patch,
   Param,
   Body,
@@ -9,7 +10,7 @@ import {
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { AprobacionesService } from './aprobaciones.service.js';
-import { RevisarAprobacionDto } from './dto/index.js';
+import { RevisarAprobacionDto, CrearEdicionInventarioDto } from './dto/index.js';
 import { TipoAprobacion, EstadoAprobacion } from './enums/index.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
@@ -41,6 +42,11 @@ function mapAprobacion(a: any) {
     campo_editado: a.campoEditado,
     valor_anterior: a.valorAnterior,
     valor_nuevo: a.valorNuevo,
+    // edicion_inventario
+    item_id: a.itemId,
+    justificacion: a.justificacion,
+    cambios_propuestos: a.cambiosPropuestos,
+    update_dto: a.updateDto,
     // transferencia_atrasada
     almacen_origen: a.almacenOrigen,
     almacen_destino: a.almacenDestino,
@@ -69,6 +75,22 @@ export class AprobacionesController {
 
     const solicitudes = await this.aprobacionesService.findAll(tipoFiltro, estadoFiltro);
     return { success: true, data: solicitudes.map(mapAprobacion) };
+  }
+
+  /** POST /api/aprobaciones/edicion-inventario — any authenticated user */
+  @Post('edicion-inventario')
+  @Roles(UserRole.ADMIN, UserRole.SUPERVISOR)
+  async crearEdicionInventario(
+    @Body() dto: CrearEdicionInventarioDto,
+    @CurrentUser('id') userId: string,
+  ) {
+    const sol = await this.aprobacionesService.createFromEdicion(dto, userId);
+    const full = await this.aprobacionesService.findOne(sol.id);
+    return {
+      success: true,
+      data: mapAprobacion(full),
+      message: 'Solicitud de edición enviada para aprobación',
+    };
   }
 
   /** GET /api/aprobaciones/:id */

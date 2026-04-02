@@ -79,6 +79,19 @@ export class SolicitudAprobacion {
   @Column({ name: 'valor_nuevo', type: 'varchar', length: 255, nullable: true })
   valorNuevo: string | null;
 
+  // ─── edicion_inventario fields ──
+  @Column({ name: 'item_id', type: 'uuid', nullable: true })
+  itemId: string | null;
+
+  @Column({ name: 'justificacion', type: 'text', nullable: true })
+  justificacion: string | null;
+
+  @Column({ name: 'cambios_propuestos', type: 'jsonb', nullable: true })
+  cambiosPropuestos: { campo: string; anterior: string; nuevo: string }[] | null;
+
+  @Column({ name: 'update_dto', type: 'jsonb', nullable: true })
+  updateDto: Record<string, any> | null;
+
   // ─── transferencia_atrasada fields ──
   @Column({ name: 'almacen_origen', type: 'varchar', length: 255, nullable: true })
   almacenOrigen: string | null;

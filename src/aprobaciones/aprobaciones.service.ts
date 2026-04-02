@@ -6,6 +6,7 @@ import { TipoAprobacion, EstadoAprobacion } from './enums/index.js';
 import { SolicitudBaja } from '../bajas/entities/index.js';
 import { EstadoBaja } from '../bajas/enums/index.js';
 import { Item } from '../inventario/entities/item.entity.js';
+import { CrearEdicionInventarioDto } from './dto/index.js';
 
 @Injectable()
 export class AprobacionesService {
@@ -33,6 +34,80 @@ export class AprobacionesService {
       evidenciaUrl: baja.evidenciaUrl,
       bajaRefId: baja.id,
     });
+    return this.aprobacionRepo.save(aprobacion);
+  }
+
+  /** Create an aprobación entry for an inventory edit by a non-admin user */
+  async createFromEdicion(
+    dto: CrearEdicionInventarioDto,
+    solicitanteId: string,
+  ): Promise<SolicitudAprobacion> {
+    const item = await this.itemRepo.findOne({ where: { id: dto.itemId } });
+    if (!item) {
+      throw new NotFoundException('Item no encontrado');
+    }
+
+    // Build human-readable list of changes
+    const fieldLabels: Record<string, string> = {
+      categoriaId: 'Categoría',
+      itemNumero: 'Nro. Ítem',
+      codigo: 'Código',
+      nombre: 'Nombre',
+      descripcion: 'Descripción',
+      unidad: 'Unidad',
+      rendimiento: 'Rendimiento',
+      proveedorId: 'Proveedor',
+      precioUnitarioBob: 'Precio BOB',
+      precioUnitarioUsd: 'Precio USD',
+    };
+
+    const itemFieldMap: Record<string, string> = {
+      categoriaId: 'categoriaId',
+      itemNumero: 'itemNumero',
+      codigo: 'codigo',
+      nombre: 'nombre',
+      descripcion: 'descripcion',
+      unidad: 'unidad',
+      rendimiento: 'rendimiento',
+      proveedorId: 'proveedorId',
+      precioUnitarioBob: 'precioUnitarioBob',
+      precioUnitarioUsd: 'precioUnitarioUsd',
+    };
+
+    const cambios: { campo: string; anterior: string; nuevo: string }[] = [];
+    for (const [key, value] of Object.entries(dto.cambios)) {
+      if (value === undefined) continue;
+      const entityField = itemFieldMap[key];
+      if (!entityField) continue;
+      const anterior = String((item as any)[entityField] ?? '');
+      const nuevo = String(value ?? '');
+      if (anterior !== nuevo) {
+        cambios.push({
+          campo: fieldLabels[key] || key,
+          anterior,
+          nuevo,
+        });
+      }
+    }
+
+    if (cambios.length === 0) {
+      throw new BadRequestException('No se detectaron cambios');
+    }
+
+    const aprobacion = this.aprobacionRepo.create({
+      tipo: TipoAprobacion.EDICION_INVENTARIO,
+      titulo: `Edición: ${item.descripcion ?? item.nombre ?? item.codigo}`,
+      descripcion: dto.justificacion,
+      estado: EstadoAprobacion.PENDIENTE,
+      solicitanteId,
+      itemId: item.id,
+      itemCodigo: item.codigo,
+      itemDescripcion: item.descripcion ?? item.nombre ?? null,
+      justificacion: dto.justificacion,
+      cambiosPropuestos: cambios,
+      updateDto: dto.cambios as any,
+    });
+
     return this.aprobacionRepo.save(aprobacion);
   }
 
@@ -95,6 +170,29 @@ export class AprobacionesService {
           item.stockTotal = Math.max(0, item.stockTotal - baja.cantidad);
           await this.itemRepo.save(item);
         }
+      }
+    }
+
+    // If it's an inventory edit, apply the proposed changes to the item
+    if (sol.tipo === TipoAprobacion.EDICION_INVENTARIO && sol.itemId && sol.updateDto) {
+      const item = await this.itemRepo.findOne({ where: { id: sol.itemId } });
+      if (item) {
+        const dto = sol.updateDto;
+        if (dto.categoriaId !== undefined) item.categoriaId = dto.categoriaId ?? null;
+        if (dto.itemNumero !== undefined) item.itemNumero = dto.itemNumero?.trim() || null;
+        if (dto.codigo !== undefined) item.codigo = dto.codigo.trim();
+        if (dto.nombre !== undefined) item.nombre = dto.nombre?.trim() || null;
+        if (dto.descripcion !== undefined) item.descripcion = dto.descripcion?.trim() || null;
+        if (dto.unidad !== undefined) item.unidad = dto.unidad.trim();
+        if (dto.rendimiento !== undefined) item.rendimiento = dto.rendimiento?.trim() || null;
+        if (dto.proveedorId !== undefined) item.proveedorId = dto.proveedorId ?? null;
+        if (dto.precioUnitarioBob !== undefined) {
+          item.precioUnitarioBob = dto.precioUnitarioBob != null ? String(dto.precioUnitarioBob) : null;
+        }
+        if (dto.precioUnitarioUsd !== undefined) {
+          item.precioUnitarioUsd = dto.precioUnitarioUsd != null ? String(dto.precioUnitarioUsd) : null;
+        }
+        await this.itemRepo.save(item);
       }
     }
 
