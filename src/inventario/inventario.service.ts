@@ -63,6 +63,7 @@ export class InventarioService {
       proveedorId: dto.proveedorId ?? null,
       precioUnitarioBob: dto.precioUnitarioBob != null ? String(dto.precioUnitarioBob) : null,
       precioUnitarioUsd: dto.precioUnitarioUsd != null ? String(dto.precioUnitarioUsd) : null,
+      stockMinimo: dto.stockMinimo ?? 0,
     });
     const saved = await this.itemRepo.save(item);
 
@@ -105,6 +106,9 @@ export class InventarioService {
     }
     if (dto.precioUnitarioUsd !== undefined) {
       item.precioUnitarioUsd = dto.precioUnitarioUsd != null ? String(dto.precioUnitarioUsd) : null;
+    }
+    if (dto.stockMinimo !== undefined) {
+      item.stockMinimo = dto.stockMinimo;
     }
 
     return this.itemRepo.save(item);

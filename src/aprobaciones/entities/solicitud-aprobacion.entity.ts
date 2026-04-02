@@ -95,6 +95,31 @@ export class SolicitudAprobacion {
   @Column({ name: 'items_transferencia', type: 'jsonb', nullable: true })
   itemsTransferencia: { codigo: string; descripcion: string; cantidad: number; unidad: string }[] | null;
 
+  // ─── entrega_retroactiva fields ──
+  @Column({ name: 'solicitud_ref_id', type: 'uuid', nullable: true })
+  solicitudRefId: string | null;
+
+  @Column({ name: 'entrega_obra', type: 'varchar', length: 255, nullable: true })
+  entregaObra: string | null;
+
+  @Column({ name: 'entrega_contratista', type: 'varchar', length: 255, nullable: true })
+  entregaContratista: string | null;
+
+  @Column({ name: 'entrega_titulo', type: 'varchar', length: 255, nullable: true })
+  entregaTitulo: string | null;
+
+  @Column({ name: 'entrega_fecha', type: 'date', nullable: true })
+  entregaFecha: string | null;
+
+  @Column({ name: 'entrega_items', type: 'jsonb', nullable: true })
+  entregaItems: { codigo: string; descripcion: string; cantidad: number; unidad: string }[] | null;
+
+  @Column({ name: 'entrega_total_items', type: 'int', nullable: true })
+  entregaTotalItems: number | null;
+
+  @Column({ name: 'entrega_total_unidades', type: 'int', nullable: true })
+  entregaTotalUnidades: number | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 

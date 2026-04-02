@@ -60,6 +60,11 @@ export class CreateItemDto {
   @IsNumber()
   precioUnitarioUsd?: number;
 
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  stockMinimo?: number;
+
   // Initial stock (only on creation)
   @IsOptional()
   @IsInt()

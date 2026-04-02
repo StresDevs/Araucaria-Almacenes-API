@@ -2,12 +2,13 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Solicitud, SolicitudItem } from './entities/index.js';
 import { AlmacenItem, Item } from '../inventario/entities/index.js';
+import { SolicitudAprobacion } from '../aprobaciones/entities/index.js';
 import { SolicitudesService } from './solicitudes.service.js';
 import { SolicitudesController } from './solicitudes.controller.js';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Solicitud, SolicitudItem, AlmacenItem, Item]),
+    TypeOrmModule.forFeature([Solicitud, SolicitudItem, AlmacenItem, Item, SolicitudAprobacion]),
   ],
   controllers: [SolicitudesController],
   providers: [SolicitudesService],

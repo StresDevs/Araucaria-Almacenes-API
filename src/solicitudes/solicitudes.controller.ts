@@ -42,6 +42,7 @@ function mapSolicitud(s: any) {
     total_items: s.totalItems,
     total_unidades: s.totalUnidades,
     estado: s.estado,
+    fecha_entrega: s.fechaEntrega,
     creado_por: s.createdBy,
     created_at: s.createdAt,
     updated_at: s.updatedAt,

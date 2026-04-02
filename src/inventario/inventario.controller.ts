@@ -74,6 +74,7 @@ function mapItem(item: any) {
     precio_unitario_usd: item.precioUnitarioUsd ? parseFloat(item.precioUnitarioUsd) : null,
     foto_url: item.fotoUrl,
     stock_total: item.stockTotal,
+    stock_minimo: item.stockMinimo,
     activo: item.activo,
     ubicaciones: (item.almacenItems ?? []).map((ai: any) => ({
       almacen_id: ai.almacenId,
