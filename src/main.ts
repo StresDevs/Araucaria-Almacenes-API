@@ -2,9 +2,15 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module.js';
+import type { NestExpressApplication } from '@nestjs/platform-express';
+import type { IncomingMessage, ServerResponse } from 'http';
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+let cachedApp: NestExpressApplication;
+
+async function createApp(): Promise<NestExpressApplication> {
+  if (cachedApp) return cachedApp;
+
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService);
 
   // Prefijo global /api
@@ -25,8 +31,28 @@ async function bootstrap() {
     credentials: true,
   });
 
+  await app.init();
+  cachedApp = app;
+  return app;
+}
+
+// Local development: listen on port
+async function bootstrap() {
+  const app = await createApp();
+  const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT', 3000);
   await app.listen(port);
   console.log(`🚀 API corriendo en http://localhost:${port}/api`);
 }
-bootstrap();
+
+// Vercel serverless handler
+export default async function handler(req: IncomingMessage, res: ServerResponse) {
+  const app = await createApp();
+  const expressInstance = app.getHttpAdapter().getInstance();
+  return expressInstance(req, res);
+}
+
+// Only listen when not in Vercel (serverless sets VERCEL=1)
+if (!process.env.VERCEL) {
+  bootstrap();
+}
