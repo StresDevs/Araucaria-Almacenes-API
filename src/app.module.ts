@@ -12,6 +12,10 @@ import { CategoriasModule } from './categorias/categorias.module.js';
 import { ProveedoresModule } from './proveedores/proveedores.module.js';
 import { InventarioModule } from './inventario/inventario.module.js';
 import { TransferenciasModule } from './transferencias/transferencias.module.js';
+import { ContratistasModule } from './contratistas/contratistas.module.js';
+import { SolicitudesModule } from './solicitudes/solicitudes.module.js';
+import { BajasModule } from './bajas/bajas.module.js';
+import { AprobacionesModule } from './aprobaciones/aprobaciones.module.js';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 
@@ -48,6 +52,10 @@ import { AppService } from './app.service.js';
     ProveedoresModule,
     InventarioModule,
     TransferenciasModule,
+    ContratistasModule,
+    SolicitudesModule,
+    BajasModule,
+    AprobacionesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
