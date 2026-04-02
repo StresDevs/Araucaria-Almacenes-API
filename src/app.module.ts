@@ -16,6 +16,7 @@ import { ContratistasModule } from './contratistas/contratistas.module.js';
 import { SolicitudesModule } from './solicitudes/solicitudes.module.js';
 import { BajasModule } from './bajas/bajas.module.js';
 import { AprobacionesModule } from './aprobaciones/aprobaciones.module.js';
+import { PrestamosModule } from './prestamos/prestamos.module.js';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 
@@ -56,6 +57,7 @@ import { AppService } from './app.service.js';
     SolicitudesModule,
     BajasModule,
     AprobacionesModule,
+    PrestamosModule,
   ],
   controllers: [AppController],
   providers: [AppService],

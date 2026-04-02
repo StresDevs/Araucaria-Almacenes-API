@@ -19,9 +19,11 @@ async function bootstrap() {
     }),
   );
 
-  // CORS
+  // CORS — soporta múltiples orígenes separados por coma
+  const rawOrigin = configService.get<string>('CORS_ORIGIN', 'http://localhost:3001');
+  const allowedOrigins = rawOrigin.split(',').map((o) => o.trim());
   app.enableCors({
-    origin: configService.get<string>('CORS_ORIGIN', 'http://localhost:3001'),
+    origin: allowedOrigins.length === 1 ? allowedOrigins[0] : allowedOrigins,
     credentials: true,
   });
 
