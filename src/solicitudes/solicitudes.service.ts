@@ -6,6 +6,8 @@ import { AlmacenItem } from '../inventario/entities/index.js';
 import { Item } from '../inventario/entities/index.js';
 import { CreateSolicitudDto } from './dto/index.js';
 import { SolicitudEstado } from './enums/index.js';
+import { SolicitudAprobacion } from '../aprobaciones/entities/index.js';
+import { TipoAprobacion, EstadoAprobacion } from '../aprobaciones/enums/index.js';
 
 @Injectable()
 export class SolicitudesService {
@@ -18,6 +20,8 @@ export class SolicitudesService {
     private readonly almacenItemRepo: Repository<AlmacenItem>,
     @InjectRepository(Item)
     private readonly itemRepo: Repository<Item>,
+    @InjectRepository(SolicitudAprobacion)
+    private readonly aprobacionRepo: Repository<SolicitudAprobacion>,
   ) {}
 
   /** Generate next sequential order number */
@@ -71,6 +75,12 @@ export class SolicitudesService {
     const totalUnidades = dto.items.reduce((sum, i) => sum + i.cantidad, 0);
     const numeroOrden = await this.generateNumeroOrden();
 
+    // Determine if the fecha_entrega is in the past (retroactive)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const fechaEntrega = dto.fechaEntrega ? new Date(dto.fechaEntrega) : null;
+    const isRetroactiva = fechaEntrega !== null && fechaEntrega < today;
+
     // Create solicitud header
     const solicitud = this.solicitudRepo.create({
       numeroOrden,
@@ -85,8 +95,9 @@ export class SolicitudesService {
       duracionDias: dto.duracionDias ?? null,
       totalItems,
       totalUnidades,
-      estado: SolicitudEstado.COMPLETADA,
+      estado: isRetroactiva ? SolicitudEstado.PENDIENTE_APROBACION : SolicitudEstado.COMPLETADA,
       createdBy: userId ?? null,
+      fechaEntrega: dto.fechaEntrega ?? null,
     });
     const saved = await this.solicitudRepo.save(solicitud);
 
@@ -100,7 +111,43 @@ export class SolicitudesService {
     );
     await this.solicitudItemRepo.save(detailEntities);
 
-    // Deduct stock from almacenes (FIFO: deduct from the first almacen with available stock)
+    // If retroactive, create an aprobacion request instead of deducting stock
+    if (isRetroactiva) {
+      // Fetch obra and contratista names for the aprobacion record
+      const fullSolicitud = await this.findById(saved.id);
+      const itemsSummary = await Promise.all(
+        dto.items.map(async (si) => {
+          const item = await this.itemRepo.findOne({ where: { id: si.itemId } });
+          return {
+            codigo: item?.codigo ?? '',
+            descripcion: item?.descripcion ?? item?.nombre ?? '',
+            cantidad: si.cantidad,
+            unidad: item?.unidad ?? 'unidad',
+          };
+        }),
+      );
+
+      const aprobacion = this.aprobacionRepo.create({
+        tipo: TipoAprobacion.ENTREGA_RETROACTIVA,
+        titulo: `Entrega retroactiva: ${dto.titulo.trim()}`,
+        descripcion: `Orden ${numeroOrden} con fecha de entrega ${dto.fechaEntrega} (anterior a la fecha actual)`,
+        estado: EstadoAprobacion.PENDIENTE,
+        solicitanteId: userId ?? '',
+        solicitudRefId: saved.id,
+        entregaObra: fullSolicitud.obra?.nombre ?? null,
+        entregaContratista: fullSolicitud.contratista?.nombre ?? null,
+        entregaTitulo: dto.titulo.trim(),
+        entregaFecha: dto.fechaEntrega ?? null,
+        entregaItems: itemsSummary,
+        entregaTotalItems: totalItems,
+        entregaTotalUnidades: totalUnidades,
+      });
+      await this.aprobacionRepo.save(aprobacion);
+
+      return this.findById(saved.id);
+    }
+
+    // Normal flow: Deduct stock from almacenes (FIFO)
     for (const si of dto.items) {
       let remaining = si.cantidad;
 
@@ -180,7 +227,7 @@ export class SolicitudesService {
   }
 
   /** Get available items with stock grouped by almacen */
-  async getItemsDisponibles(almacenId?: string): Promise<any[]> {
+  async getItemsDisponibles(almacenId?: string, obraId?: string): Promise<any[]> {
     const qb = this.almacenItemRepo
       .createQueryBuilder('ai')
       .leftJoinAndSelect('ai.item', 'item')
@@ -191,6 +238,10 @@ export class SolicitudesService {
 
     if (almacenId) {
       qb.andWhere('ai.almacen_id = :almacenId', { almacenId });
+    }
+
+    if (obraId) {
+      qb.andWhere('almacen.obra_id = :obraId', { obraId });
     }
 
     const almacenItems = await qb.getMany();

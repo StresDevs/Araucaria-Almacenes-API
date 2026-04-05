@@ -3,4 +3,5 @@ export enum TipoAprobacion {
   EDICION_STOCK = 'edicion_stock',
   EDICION_INVENTARIO = 'edicion_inventario',
   TRANSFERENCIA_ATRASADA = 'transferencia_atrasada',
+  ENTREGA_RETROACTIVA = 'entrega_retroactiva',
 }

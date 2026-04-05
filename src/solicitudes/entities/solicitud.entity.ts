@@ -68,6 +68,9 @@ export class Solicitud {
   @Column({ name: 'created_by', type: 'uuid', nullable: true })
   createdBy: string | null;
 
+  @Column({ name: 'fecha_entrega', type: 'date', nullable: true, default: null })
+  fechaEntrega: string | null;
+
   @OneToMany(() => SolicitudItem, (si) => si.solicitud, { cascade: true })
   items: SolicitudItem[];
 

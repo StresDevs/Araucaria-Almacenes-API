@@ -3,6 +3,8 @@ import {
   IsString,
   IsUUID,
   IsNumber,
+  IsInt,
+  Min,
   MaxLength,
 } from 'class-validator';
 
@@ -51,4 +53,9 @@ export class UpdateItemDto {
   @IsOptional()
   @IsNumber()
   precioUnitarioUsd?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  stockMinimo?: number;
 }

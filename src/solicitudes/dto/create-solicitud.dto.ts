@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  IsDateString,
   Min,
   Max,
   ArrayMinSize,
@@ -66,6 +67,10 @@ export class CreateSolicitudDto {
   @Min(1)
   @Max(365)
   duracionDias?: number;
+
+  @IsOptional()
+  @IsDateString()
+  fechaEntrega?: string;
 
   @IsArray()
   @ArrayMinSize(1)

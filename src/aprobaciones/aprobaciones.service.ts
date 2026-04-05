@@ -5,8 +5,10 @@ import { SolicitudAprobacion } from './entities/index.js';
 import { TipoAprobacion, EstadoAprobacion } from './enums/index.js';
 import { SolicitudBaja } from '../bajas/entities/index.js';
 import { EstadoBaja } from '../bajas/enums/index.js';
-import { Item } from '../inventario/entities/item.entity.js';
+import { Item, AlmacenItem } from '../inventario/entities/index.js';
 import { CrearEdicionInventarioDto } from './dto/index.js';
+import { Solicitud, SolicitudItem } from '../solicitudes/entities/index.js';
+import { SolicitudEstado } from '../solicitudes/enums/index.js';
 
 @Injectable()
 export class AprobacionesService {
@@ -17,6 +19,12 @@ export class AprobacionesService {
     private readonly bajaRepo: Repository<SolicitudBaja>,
     @InjectRepository(Item)
     private readonly itemRepo: Repository<Item>,
+    @InjectRepository(AlmacenItem)
+    private readonly almacenItemRepo: Repository<AlmacenItem>,
+    @InjectRepository(Solicitud)
+    private readonly solicitudRepo: Repository<Solicitud>,
+    @InjectRepository(SolicitudItem)
+    private readonly solicitudItemRepo: Repository<SolicitudItem>,
   ) {}
 
   /** Create an aprobación entry (called internally when a baja is created) */
@@ -196,6 +204,11 @@ export class AprobacionesService {
       }
     }
 
+    // If it's an entrega retroactiva, execute the stock deduction
+    if (sol.tipo === TipoAprobacion.ENTREGA_RETROACTIVA && sol.solicitudRefId) {
+      await this.executeEntregaRetroactiva(sol.solicitudRefId);
+    }
+
     return this.aprobacionRepo.save(sol);
   }
 
@@ -227,6 +240,86 @@ export class AprobacionesService {
       }
     }
 
+    // If it's an entrega retroactiva, mark the solicitud as rechazada
+    if (sol.tipo === TipoAprobacion.ENTREGA_RETROACTIVA && sol.solicitudRefId) {
+      const solicitud = await this.solicitudRepo.findOne({ where: { id: sol.solicitudRefId } });
+      if (solicitud && solicitud.estado === SolicitudEstado.PENDIENTE_APROBACION) {
+        solicitud.estado = SolicitudEstado.RECHAZADA;
+        await this.solicitudRepo.save(solicitud);
+      }
+    }
+
     return this.aprobacionRepo.save(sol);
+  }
+
+  /** Re-appeal a rejected entrega retroactiva */
+  async reapelar(id: string, userId: string): Promise<SolicitudAprobacion> {
+    const sol = await this.findOne(id);
+    if (sol.estado !== EstadoAprobacion.RECHAZADA) {
+      throw new BadRequestException('Solo se pueden re-apelar solicitudes rechazadas');
+    }
+    if (sol.tipo !== TipoAprobacion.ENTREGA_RETROACTIVA) {
+      throw new BadRequestException('Solo las entregas retroactivas pueden ser re-apeladas');
+    }
+
+    // Reset the aprobacion to pendiente
+    sol.estado = EstadoAprobacion.PENDIENTE;
+    sol.revisadoPorId = null;
+    sol.fechaRevision = null;
+    sol.notasRevision = null;
+    await this.aprobacionRepo.save(sol);
+
+    // Reset the solicitud to pendiente_aprobacion
+    if (sol.solicitudRefId) {
+      const solicitud = await this.solicitudRepo.findOne({ where: { id: sol.solicitudRefId } });
+      if (solicitud) {
+        solicitud.estado = SolicitudEstado.PENDIENTE_APROBACION;
+        await this.solicitudRepo.save(solicitud);
+      }
+    }
+
+    return this.findOne(sol.id);
+  }
+
+  /** Execute stock deduction for an approved entrega retroactiva */
+  private async executeEntregaRetroactiva(solicitudId: string): Promise<void> {
+    const solicitud = await this.solicitudRepo.findOne({
+      where: { id: solicitudId },
+      relations: ['items'],
+    });
+    if (!solicitud || solicitud.estado !== SolicitudEstado.PENDIENTE_APROBACION) return;
+
+    // Deduct stock (FIFO, same logic as normal solicitudes)
+    for (const si of solicitud.items) {
+      let remaining = si.cantidad;
+      const almacenItems = await this.almacenItemRepo.find({
+        where: { itemId: si.itemId },
+        order: { createdAt: 'ASC' },
+      });
+
+      for (const ai of almacenItems) {
+        if (remaining <= 0) break;
+        const deduct = Math.min(ai.cantidad, remaining);
+        ai.cantidad -= deduct;
+        remaining -= deduct;
+
+        if (ai.cantidad <= 0) {
+          await this.almacenItemRepo.remove(ai);
+        } else {
+          await this.almacenItemRepo.save(ai);
+        }
+      }
+
+      // Update item stockTotal
+      const item = await this.itemRepo.findOne({ where: { id: si.itemId } });
+      if (item) {
+        item.stockTotal = Math.max(0, item.stockTotal - si.cantidad);
+        await this.itemRepo.save(item);
+      }
+    }
+
+    // Mark solicitud as completada
+    solicitud.estado = SolicitudEstado.COMPLETADA;
+    await this.solicitudRepo.save(solicitud);
   }
 }

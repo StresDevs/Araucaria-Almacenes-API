@@ -53,6 +53,15 @@ function mapAprobacion(a: any) {
     fecha_transferencia: a.fechaTransferencia,
     fecha_registro: a.fechaRegistro,
     items_transferencia: a.itemsTransferencia,
+    // entrega_retroactiva
+    solicitud_ref_id: a.solicitudRefId,
+    entrega_obra: a.entregaObra,
+    entrega_contratista: a.entregaContratista,
+    entrega_titulo: a.entregaTitulo,
+    entrega_fecha: a.entregaFecha,
+    entrega_items: a.entregaItems,
+    entrega_total_items: a.entregaTotalItems,
+    entrega_total_unidades: a.entregaTotalUnidades,
   };
 }
 
@@ -124,5 +133,16 @@ export class AprobacionesController {
     const sol = await this.aprobacionesService.rechazar(id, adminId, dto.notasRevision);
     const full = await this.aprobacionesService.findOne(sol.id);
     return { success: true, data: mapAprobacion(full), message: 'Solicitud rechazada' };
+  }
+
+  /** PATCH /api/aprobaciones/:id/reapelar — Re-appeal a rejected entrega retroactiva */
+  @Patch(':id/reapelar')
+  @Roles(UserRole.ADMIN, UserRole.SUPERVISOR)
+  async reapelar(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    const sol = await this.aprobacionesService.reapelar(id, userId);
+    return { success: true, data: mapAprobacion(sol), message: 'Solicitud re-apelada correctamente' };
   }
 }
