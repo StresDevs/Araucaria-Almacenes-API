@@ -18,6 +18,8 @@ import { SolicitudesModule } from './solicitudes/solicitudes.module.js';
 import { BajasModule } from './bajas/bajas.module.js';
 import { AprobacionesModule } from './aprobaciones/aprobaciones.module.js';
 import { PrestamosModule } from './prestamos/prestamos.module.js';
+import { EmailModule } from './email/email.module.js';
+import { ConsumoModule } from './consumo/consumo.module.js';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 
@@ -53,6 +55,7 @@ if (!existsSync(uploadsPath)) {
 
     AuthModule,
     UsersModule,
+    EmailModule,
     ObrasModule,
     AlmacenesModule,
     SectorizacionModule,
@@ -65,6 +68,7 @@ if (!existsSync(uploadsPath)) {
     BajasModule,
     AprobacionesModule,
     PrestamosModule,
+    ConsumoModule,
   ],
   controllers: [AppController],
   providers: [AppService],

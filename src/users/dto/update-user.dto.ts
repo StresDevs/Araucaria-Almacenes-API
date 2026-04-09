@@ -1,37 +1,38 @@
 import {
   IsEmail,
   IsEnum,
-  IsNotEmpty,
   IsOptional,
   IsString,
   MaxLength,
-  ValidateIf,
+  Matches,
 } from 'class-validator';
 import { UserRole } from '../enums/index.js';
 
-export class CreateUserDto {
+export class UpdateUserDto {
   @IsString()
-  @IsNotEmpty({ message: 'Los nombres son requeridos' })
+  @IsOptional()
   @MaxLength(100)
-  nombres: string;
+  nombres?: string;
 
   @IsString()
-  @IsNotEmpty({ message: 'El primer apellido es requerido' })
+  @IsOptional()
   @MaxLength(100)
-  primerApellido: string;
+  primerApellido?: string;
 
   @IsString()
   @IsOptional()
   @MaxLength(100)
   segundoApellido?: string;
 
-  @ValidateIf((o) => !o.sinCorreo)
+  @IsOptional()
   @IsEmail({}, { message: 'Email inválido' })
-  @IsNotEmpty({ message: 'El email es requerido' })
   email?: string;
 
+  @IsString()
   @IsOptional()
-  sinCorreo?: boolean;
+  @MaxLength(50)
+  @Matches(/^[a-zA-Z0-9._-]+$/, { message: 'El username solo puede contener letras, números, puntos, guiones y guiones bajos' })
+  username?: string;
 
   @IsString()
   @IsOptional()
@@ -39,6 +40,6 @@ export class CreateUserDto {
   telefono?: string;
 
   @IsEnum(UserRole, { message: 'Rol inválido' })
-  @IsNotEmpty({ message: 'El rol es requerido' })
-  rol: UserRole;
+  @IsOptional()
+  rol?: UserRole;
 }

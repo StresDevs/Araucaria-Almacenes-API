@@ -49,6 +49,26 @@ export class CreateItemDto {
   rendimiento?: string;
 
   @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  aplicacion?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  medida?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  piezasPorCaja?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  espacioDeUso?: string;
+
+  @IsOptional()
   @IsUUID()
   proveedorId?: string;
 
