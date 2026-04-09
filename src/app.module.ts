@@ -17,6 +17,8 @@ import { ContratistasModule } from './contratistas/contratistas.module.js';
 import { SolicitudesModule } from './solicitudes/solicitudes.module.js';
 import { BajasModule } from './bajas/bajas.module.js';
 import { AprobacionesModule } from './aprobaciones/aprobaciones.module.js';
+import { EmailModule } from './email/email.module.js';
+import { ConsumoModule } from './consumo/consumo.module.js';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 
@@ -52,6 +54,7 @@ if (!existsSync(uploadsPath)) {
 
     AuthModule,
     UsersModule,
+    EmailModule,
     ObrasModule,
     AlmacenesModule,
     SectorizacionModule,
@@ -63,6 +66,7 @@ if (!existsSync(uploadsPath)) {
     SolicitudesModule,
     BajasModule,
     AprobacionesModule,
+    ConsumoModule,
   ],
   controllers: [AppController],
   providers: [AppService],

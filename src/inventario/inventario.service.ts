@@ -60,6 +60,10 @@ export class InventarioService {
       descripcion: dto.descripcion?.trim() || null,
       unidad: dto.unidad.trim(),
       rendimiento: dto.rendimiento?.trim() || null,
+      aplicacion: dto.aplicacion?.trim() || null,
+      medida: dto.medida?.trim() || null,
+      piezasPorCaja: dto.piezasPorCaja ?? null,
+      espacioDeUso: dto.espacioDeUso?.trim() || null,
       proveedorId: dto.proveedorId ?? null,
       precioUnitarioBob: dto.precioUnitarioBob != null ? String(dto.precioUnitarioBob) : null,
       precioUnitarioUsd: dto.precioUnitarioUsd != null ? String(dto.precioUnitarioUsd) : null,
@@ -100,6 +104,10 @@ export class InventarioService {
     if (dto.descripcion !== undefined) item.descripcion = dto.descripcion?.trim() || null;
     if (dto.unidad !== undefined) item.unidad = dto.unidad.trim();
     if (dto.rendimiento !== undefined) item.rendimiento = dto.rendimiento?.trim() || null;
+    if (dto.aplicacion !== undefined) item.aplicacion = dto.aplicacion?.trim() || null;
+    if (dto.medida !== undefined) item.medida = dto.medida?.trim() || null;
+    if (dto.piezasPorCaja !== undefined) item.piezasPorCaja = dto.piezasPorCaja ?? null;
+    if (dto.espacioDeUso !== undefined) item.espacioDeUso = dto.espacioDeUso?.trim() || null;
     if (dto.proveedorId !== undefined) item.proveedorId = dto.proveedorId ?? null;
     if (dto.precioUnitarioBob !== undefined) {
       item.precioUnitarioBob = dto.precioUnitarioBob != null ? String(dto.precioUnitarioBob) : null;

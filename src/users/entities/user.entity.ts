@@ -24,8 +24,11 @@ export class User {
   @Column({ length: 150 })
   nombre: string; // nombre completo (generado)
 
-  @Column({ length: 255, unique: true })
-  email: string;
+  @Column({ type: 'varchar', length: 255, unique: true, nullable: true })
+  email: string | null;
+
+  @Column({ type: 'varchar', length: 50, unique: true, nullable: true })
+  username: string | null;
 
   @Column({ type: 'varchar', length: 50, nullable: true })
   telefono: string | null;
@@ -41,6 +44,15 @@ export class User {
 
   @Column({ name: 'debe_cambiar_password', default: true })
   debeCambiarPassword: boolean;
+
+  @Column({ name: 'username_editado', default: false })
+  usernameEditado: boolean;
+
+  @Column({ name: 'intentos_fallidos', default: 0 })
+  intentosFallidos: number;
+
+  @Column({ type: 'timestamptz', name: 'bloqueado_hasta', nullable: true })
+  bloqueadoHasta: Date | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;

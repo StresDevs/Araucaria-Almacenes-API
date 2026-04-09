@@ -60,6 +60,7 @@ function mapItem(item: any) {
   return {
     id: item.id,
     tipo_origen: item.tipoOrigen,
+    codigo_inventario: item.codigoInventario,
     categoria_id: item.categoriaId,
     categoria_nombre: item.categoria?.nombre ?? null,
     item_numero: item.itemNumero,
@@ -68,6 +69,10 @@ function mapItem(item: any) {
     descripcion: item.descripcion,
     unidad: item.unidad,
     rendimiento: item.rendimiento,
+    aplicacion: item.aplicacion,
+    medida: item.medida,
+    piezas_por_caja: item.piezasPorCaja,
+    espacio_de_uso: item.espacioDeUso,
     proveedor_id: item.proveedorId,
     proveedor_nombre: item.proveedor?.nombre ?? null,
     precio_unitario_bob: item.precioUnitarioBob ? parseFloat(item.precioUnitarioBob) : null,

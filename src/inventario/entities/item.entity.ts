@@ -21,6 +21,9 @@ export class Item {
   @Column({ name: 'tipo_origen', type: 'enum', enum: ItemOrigen })
   tipoOrigen: ItemOrigen;
 
+  @Column({ name: 'codigo_inventario', type: 'varchar', length: 20 })
+  codigoInventario: string;
+
   @Column({ name: 'categoria_id', type: 'uuid', nullable: true })
   categoriaId: string | null;
 
@@ -45,6 +48,18 @@ export class Item {
 
   @Column({ type: 'varchar', length: 100, nullable: true })
   rendimiento: string | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  aplicacion: string | null;
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  medida: string | null;
+
+  @Column({ name: 'piezas_por_caja', type: 'int', nullable: true })
+  piezasPorCaja: number | null;
+
+  @Column({ name: 'espacio_de_uso', type: 'varchar', length: 200, nullable: true })
+  espacioDeUso: string | null;
 
   @Column({ name: 'proveedor_id', type: 'uuid', nullable: true })
   proveedorId: string | null;
