@@ -55,7 +55,13 @@ export class PrestamosService {
   }
 
   /** List all préstamos with filters */
-  async findAll(estado?: string, obraId?: string, search?: string): Promise<Prestamo[]> {
+  async findAll(
+    estado?: string,
+    obraId?: string,
+    search?: string,
+    fechaDesde?: string,
+    fechaHasta?: string,
+  ): Promise<Prestamo[]> {
     const qb = this.prestamoRepo
       .createQueryBuilder('p')
       .leftJoinAndSelect('p.item', 'item')
@@ -78,6 +84,14 @@ export class PrestamosService {
         '(item.codigo ILIKE :s OR item.descripcion ILIKE :s OR item.nombre ILIKE :s OR p.persona_prestamo ILIKE :s)',
         { s: `%${search}%` },
       );
+    }
+
+    if (fechaDesde) {
+      qb.andWhere('p.createdAt >= :desde', { desde: new Date(`${fechaDesde}T00:00:00.000Z`) });
+    }
+
+    if (fechaHasta) {
+      qb.andWhere('p.createdAt <= :hasta', { hasta: new Date(`${fechaHasta}T23:59:59.999Z`) });
     }
 
     return qb.getMany();

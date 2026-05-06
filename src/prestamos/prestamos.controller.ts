@@ -62,15 +62,17 @@ export class PrestamosController {
     return { success: true, data: mapPrestamo(full), message: 'Préstamo registrado' };
   }
 
-  /** GET /api/prestamos?estado=&obraId=&search= */
+  /** GET /api/prestamos?estado=&obraId=&search=&fechaDesde=&fechaHasta= */
   @Get()
   @Roles(UserRole.ADMIN, UserRole.SUPERVISOR)
   async findAll(
     @Query('estado') estado?: string,
     @Query('obraId') obraId?: string,
     @Query('search') search?: string,
+    @Query('fechaDesde') fechaDesde?: string,
+    @Query('fechaHasta') fechaHasta?: string,
   ) {
-    const list = await this.prestamosService.findAll(estado, obraId, search);
+    const list = await this.prestamosService.findAll(estado, obraId, search, fechaDesde, fechaHasta);
     return { success: true, data: list.map(mapPrestamo) };
   }
 

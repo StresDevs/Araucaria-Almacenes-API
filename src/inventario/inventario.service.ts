@@ -215,4 +215,21 @@ export class InventarioService {
       order: { createdAt: 'DESC' },
     });
   }
+
+  async findAllEntradas(fechaDesde?: string, fechaHasta?: string): Promise<EntradaStock[]> {
+    const qb = this.entradaStockRepo
+      .createQueryBuilder('e')
+      .leftJoinAndSelect('e.item', 'item')
+      .leftJoinAndSelect('e.almacen', 'almacen')
+      .orderBy('e.createdAt', 'DESC');
+
+    if (fechaDesde) {
+      qb.andWhere('e.createdAt >= :desde', { desde: new Date(`${fechaDesde}T00:00:00.000Z`) });
+    }
+    if (fechaHasta) {
+      qb.andWhere('e.createdAt <= :hasta', { hasta: new Date(`${fechaHasta}T23:59:59.999Z`) });
+    }
+
+    return qb.getMany();
+  }
 }

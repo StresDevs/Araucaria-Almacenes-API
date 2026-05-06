@@ -119,6 +119,31 @@ export class InventarioController {
     return { success: true, data: { exists } };
   }
 
+  /** GET /api/inventario/entradas?fechaDesde=&fechaHasta= — List all stock entries */
+  @Get('entradas')
+  async findAllEntradas(
+    @Query('fechaDesde') fechaDesde?: string,
+    @Query('fechaHasta') fechaHasta?: string,
+  ) {
+    const entradas = await this.inventarioService.findAllEntradas(fechaDesde, fechaHasta);
+    return {
+      success: true,
+      data: entradas.map((e) => ({
+        id: e.id,
+        item_id: e.itemId,
+        item_codigo: e.item?.codigo ?? '',
+        item_nombre: e.item?.nombre ?? null,
+        item_descripcion: e.item?.descripcion ?? null,
+        almacen_id: e.almacenId,
+        almacen_nombre: e.almacen?.nombre ?? null,
+        cantidad: e.cantidad,
+        descripcion: e.descripcion,
+        registrado_por: e.registradoPor,
+        created_at: e.createdAt,
+      })),
+    };
+  }
+
   /** GET /api/inventario/:id */
   @Get(':id')
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
